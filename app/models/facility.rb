@@ -5,8 +5,6 @@ class Facility < ActiveRecord::Base
 	belongs_to :user
 	validates :name, :lat, :long, :services, presence: true
 
-	# is_impressionable
-
 	scope :is_verified, -> {
 		where(verified: true)
 	}
@@ -94,7 +92,7 @@ class Facility < ActiveRecord::Base
 
 		# First query db for any verified facility whose services contains the service_query
 		#   and store in searched_facilities
-		searched_facilities = Facility.search_by_services(service_query).is_verified
+		searched_facilities = Facility.search_by_services(service_query).is_verified.order(name: :asc)
 
 		# Select Opened/Closed facilities
 		selected_facilities = Array.new
@@ -108,21 +106,15 @@ class Facility < ActiveRecord::Base
 					selected_facilities.push facility
 				end
 			else
-			  # Only for Testing purposes (should delete these lines later)
-			  return []
-			  # raise 'Error! Should not go into this one'
+				# If wrong open string is provided. Returns empty.
+				return []
 			end
 		end #/searched_facilities.each
 
-		# Sorts out selected facilities.
-		ret_arr = Array.new
-		if (prox=="Near")
-			ret_arr = selected_facilities.sort{ |f| f.distance(ulat, ulong) }
-		elsif (prox=="Name")
-			ret_arr = selected_facilities.sort_by(&:name)
-		end #/prox == Near, Name
-
-		return ret_arr
+		# Return selected facilities sorted by distance.
+		return selected_facilities if (prox=="Name")
+		# Return selected facilities sorted by distance
+		return self.sort_by_distance(selected_facilities, ulat, ulong)
 	end #ends self.contains_service?
 
 	def self.redist_sort(inArray, ulat, ulong)
@@ -139,6 +131,13 @@ class Facility < ActiveRecord::Base
 
 		return arr
 	end
+
+	# if (prox=="Near")
+	# elsif (prox=="Name")
+	# 	ret_arr = selected_facilities.sort_by(&:name)
+	def self.sort_by_distance(facilities_array, user_lat, user_long)
+		facilities_array.sort{ |f| f.distance(user_lat, user_long) }
+	end #/sort_by_distance
 
 	#use haversine and power to calculate distance between user's latlongs and facilities'
 	def self.haversine(lat1, long1, lat2, long2)

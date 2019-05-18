@@ -186,7 +186,7 @@ RSpec.describe Facility do
                 expect(searched_facility).to be_empty
             end
 
-            it 'should return empty array if Open is Yes or No' do
+            it 'should return empty array if Open is neither Yes nor No' do
                 allow(Time).to receive(:now).and_return(time_obj(weekdays_hash[:mon], :morning)+8.hours)
                 a_facility = Facility.first
                 service_string = a_facility.services
