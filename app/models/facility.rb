@@ -48,6 +48,11 @@ class Facility < ActiveRecord::Base
 		!self.is_open?(ctime)
 	end #/is_closed?
 
+	def welcomes?(welcome)
+		return true if welcome == 'All' or welcome.is_nil?
+		self.welcomes.include?(welcome)
+	end
+
 	def time_in_range?(ctime, wday)
 		# We consider Facilities opening in 5 mins as an Opened Facilty.
 		open1  = Facility.translate_time(ctime, self["starts#{wday}_at"])
@@ -75,7 +80,8 @@ class Facility < ActiveRecord::Base
 	end #/translate_time
 
 	def distance(ulat, ulong)
-		Facility.haversine(self[:lat], self[:long], ulat, ulong)
+		# Facility.haversine(self[:lat], self[:long], ulat, ulong)
+		Facility.haversine(self.lat, self.long, ulat, ulong)
 	end
 
 	def self.contains_service(service_query, prox, open, ulat, ulong)
@@ -132,10 +138,12 @@ class Facility < ActiveRecord::Base
 		return arr
 	end
 
-	# if (prox=="Near")
-	# elsif (prox=="Name")
-	# 	ret_arr = selected_facilities.sort_by(&:name)
+	def self.print_coords(facilities_array, user_lat, user_long)
+		facilities_array.each { |fac| puts "#{fac.id}:[#{fac.lat}, #{fac.long}, #{fac.distance(user_lat, user_long)}]" }
+	end #/print_coords
+
 	def self.sort_by_distance(facilities_array, user_lat, user_long)
+		# Facility.print_coords(facilities_array, user_lat, user_long)
 		facilities_array.sort{ |f| f.distance(user_lat, user_long) }
 	end #/sort_by_distance
 

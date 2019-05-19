@@ -21,138 +21,50 @@ class FacilitiesController < ApplicationController
       session['facilities_category'] = params[:scope]
       session['facilities_list'] = request.original_url
 
-      @latitude = 0
-      @longitude = 0
-      @coordinates = cookies[:coordinates]
-      if @coordinates.present?
-        @coordinates = JSON.parse(@coordinates)
-        @latitude = @coordinates['lat']
-        @longitude = @coordinates['long']
-      end
-
-      #use to catch undefined latlongs
-      #if !(@latitude.nil?) || !(@longitude.nil?)
-        #redirect_to facilities_url
-      #end
-
+      # fq = FacilitiesQuery.new(params, cookies)
+      # logger.info fq.user_coordinates
+      ######
+      # Debugging discoveries: (Fabio: 2019-05-19)
+      ## case params[:scope] when Search
+      # is never reached. I could not reproduce its usage.
+      ## params[:welcome] is never set
+      # logger.info "welcome param: #{params[:welcome]}"
+      ## params[:sortby] is never set
+      # logger.info "sortby param: #{params[:sortby]}"
+      ## params[:hours] is never set
+      # logger.info "hours param: #{params[:hours]}"
+      ## params[:services] is never set
+      # logger.info "services param: #{params[:services]}"
+      
       @scope = params[:scope]
 
-      @facilities_near_yes_distance = Array.new
-      @facilities_near_no_distance = Array.new
-      @facilities_name_yes_distance = Array.new
-      @facilities_name_no_distance = Array.new
+      fac_query = FacilitiesQuery.new(params, cookies)
+      @latitude = fac_query.user_latitude
+      @longitude = fac_query.user_longitude
 
-      case params[:scope]
-      when 'Shelter'
-        @facilities_near_yes = Facility.contains_service("Shelter", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Shelter", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Shelter", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Shelter", "Name", "No", @latitude, @longitude)
-      when 'Food'
-        @facilities_near_yes = Facility.contains_service("Food", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Food", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Food", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Food", "Name", "No", @latitude, @longitude)
-      when 'Medical'
-        @facilities_near_yes = Facility.contains_service("Medical", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Medical", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Medical", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Medical", "Name", "No", @latitude, @longitude)
-      when 'Hygiene'
-        @facilities_near_yes = Facility.contains_service("Hygiene", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Hygiene", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Hygiene", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Hygiene", "Name", "No", @latitude, @longitude)
-      when 'Technology'
-        @facilities_near_yes = Facility.contains_service("Technology", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Technology", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Technology", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Technology", "Name", "No", @latitude, @longitude)
-      when 'Legal'
-        @facilities_near_yes = Facility.contains_service("Legal", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Legal", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Legal", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Legal", "Name", "No", @latitude, @longitude)
-      when 'Learning'
-        @facilities_near_yes = Facility.contains_service("Learning", "Near", "Yes", @latitude, @longitude)
-        @facilities_near_no = Facility.contains_service("Learning", "Near", "No", @latitude, @longitude)
-        @facilities_name_yes = Facility.contains_service("Learning", "Name", "Yes", @latitude, @longitude)
-        @facilities_name_no = Facility.contains_service("Learning", "Name", "No", @latitude, @longitude)
-      # when 'Training_Services'
-      #   @facilities_near_yes = Facility.contains_service("Training_Services", "Near", "Yes", @latitude, @longitude)
-      #   @facilities_near_no = Facility.contains_service("Training_Services", "Near", "No", @latitude, @longitude)
-      #   @facilities_name_yes = Facility.contains_service("Training_Services", "Name", "Yes", @latitude, @longitude)
-      #   @facilities_name_no = Facility.contains_service("Training_Services", "Name", "No", @latitude, @longitude)
-      when 'Search'
-        @sortby = params[:sortby]
-        @hours = params[:hours]
-        @services = params[:services]
-        @welcome = params[:welcome]
-
-
-        if !(@services.nil?)
-          servicesarr = @services.split(",")
-        else
-          servicesarr = ["Shelter", "Food", "Medical", "Hygiene", "Technology", "Legal", "Learning"]
-        end
-
-        @facilities_near_yes = []
-        @facilities_near_no = []
-        @facilities_name_yes = []
-        @facilities_name_no = []
-
-        servicesarr.each do |s|
-          @facilities_near_yes = @facilities_near_yes.concat Facility.contains_service(s, "Near", "Yes", @latitude, @longitude)
-          @facilities_near_no = @facilities_near_no.concat Facility.contains_service(s, "Near", "No", @latitude, @longitude)
-          @facilities_name_yes = @facilities_name_yes.concat Facility.contains_service(s, "Name", "Yes", @latitude, @longitude)
-          @facilities_name_no = @facilities_name_no.concat Facility.contains_service(s, "Name", "No", @latitude, @longitude)
-        end
-
-
-        @facilities_near_yes = Facility.redist_sort(@facilities_near_yes.uniq, @latitude, @longitude)
-        @facilities_near_no = Facility.redist_sort(@facilities_near_no.uniq, @latitude, @longitude)
-        @facilities_name_yes = Facility.rename_sort(@facilities_name_yes.uniq)
-        @facilities_name_no = Facility.rename_sort(@facilities_name_no.uniq)
-
-        #remove from each of the @facilities any facilities which don't contain the appropriate @welcome
-        if @welcome != "All"
-          @facilities_near_yes.keep_if {|f| f.welcomes == @welcome}
-          @facilities_near_no.keep_if {|f| f.welcomes == @welcome}
-          @facilities_name_yes.keep_if {|f| f.welcomes == @welcome}
-          @facilities_name_no.keep_if {|f| f.welcomes == @welcome}
-        end
-
-
-        #remove from each of the @facilities any facilities that are not verified
-          @facilities_near_yes.keep_if {|f| f.verified == true}
-          @facilities_near_no.keep_if {|f| f.verified == true}
-          @facilities_name_yes.keep_if {|f| f.verified == true}
-          @facilities_name_no.keep_if {|f| f.verified == true}
-
+      # These facilities_*_* variables are not needed anymore with the
+      #    implementation of the query object. I'm keeping them for now
+      #    because the views will need to be refactored.
+      # TODO: Refactor Views and simply FacilitiesController#filtered
+      search_cat = fac_query.main_categories.select{ |cat| cat == @scope }
+      unless search_cat.empty?
+        fac_query.run
+        @facilities_near_yes = fac_query.opened_by_distance
+        @facilities_near_no = fac_query.closed_by_distance
+        @facilities_name_yes = fac_query.opened_by_name
+        @facilities_name_no = fac_query.closed_by_name
       else
-        @facilities_near_yes = Facility.where(verified: true)
-        @facilities_near_no = Facility.where(verified: true)
-        @facilities_name_yes = Facility.where(verified: true)
-        @facilities_name_no = Facility.where(verified: true)
+        @facilities_near_yes = Facility.is_verified
+        @facilities_near_no = Facility.is_verified
+        @facilities_name_yes = Facility.is_verified
+        @facilities_name_no = Facility.is_verified
       end
 
-      @facilities = Facility.where(verified: true)
+      @facilities_near_yes_distance = fac_query.list_distances(@facilities_near_yes)
+      @facilities_near_no_distance = fac_query.list_distances(@facilities_near_no)
+      @facilities_name_yes_distance = fac_query.list_distances(@facilities_name_yes)
+      @facilities_name_no_distance = fac_query.list_distances(@facilities_name_no)
 
-      @facilities_near_yes.each do |f|
-         @facilities_near_yes_distance.push(Facility.haversine_min(@latitude.to_d, @longitude.to_d, f.lat, f.long))
-      end
-
-      @facilities_near_no.each do |f|
-         @facilities_near_no_distance.push(Facility.haversine_min(@latitude.to_d, @longitude.to_d, f.lat, f.long))
-      end
-
-      @facilities_name_yes.each do |f|
-         @facilities_name_yes_distance.push(Facility.haversine_min(@latitude.to_d, @longitude.to_d, f.lat, f.long))
-      end
-
-      @facilities_name_no.each do |f|
-         @facilities_name_no_distance.push(Facility.haversine_min(@latitude.to_d, @longitude.to_d, f.lat, f.long))
-      end
 
       if !cookies[:non_data_user].present?
         if !session[:id].present?

@@ -215,7 +215,7 @@ RSpec.describe Facility do
                                 ulat = open_all_day.lat
                                 ulong = open_all_day.long
                                 searched_facility = Facility.contains_service(service_string, prox, "No", ulat, ulong)
-                                expect(searched_facility).to be_empty
+                                expect(searched_facility).not_to include(open_all_day)
                             end
                         end
 

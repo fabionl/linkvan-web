@@ -2,7 +2,7 @@
 
 open_all_day:
     id: 85
-    name: Test
+    name: test
     services: Legal
     lat: 49.2792033
     long: -123.09930370000001
@@ -28,9 +28,9 @@ open_all_day:
 close_all_day:
     id: 88
     name: test
-    services: Shelter Food
+    services: Shelter Food Legal
     lat: 49.2792033
-    long: -123.09930359999998
+    long: -123.09930370000001
     open_all_day_mon: false
     open_all_day_tues: false
     open_all_day_wed: false
@@ -52,7 +52,7 @@ close_all_day:
 # ..........................................
 open_all_day_nearby:
     id: 100000
-    name: ZTest
+    name: ztest
     services: Legal
     lat: 49.2792030
     long: -123.09930370000001
@@ -75,9 +75,34 @@ open_all_day_nearby:
 # ...
 
 # ..........................................
+close_all_day_nearby:
+    id: 1000
+    name: ztest
+    services: Legal
+    lat: 49.2792030
+    long: -123.09930370000001
+    open_all_day_mon: false
+    open_all_day_tues: false
+    open_all_day_wed: false
+    open_all_day_thurs: false
+    open_all_day_fri: false
+    open_all_day_sat: false
+    open_all_day_sun: false
+    closed_all_day_mon: true
+    closed_all_day_tues: true
+    closed_all_day_wed: true
+    closed_all_day_thurs: true
+    closed_all_day_fri: true
+    closed_all_day_sat: true
+    closed_all_day_sun: true
+    user_id: 1
+    verified: true
+# ...
+
+# ..........................................
 open_commercial:
     id: 99
-    name: ZZTest
+    name: zztest
     services: Technology
     lat: 49.2792030
     long: -123.09930370000001
